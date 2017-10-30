@@ -11,8 +11,9 @@ from shapely.wkt import loads, dumps
 import json
 import requests 
 import copy 
+import pdb
 
-def spleisveglenkesegmenter( lenkebiter): 
+def spleisveglenkesegmenter( lenkebiter, slettgeometri=False): 
     """Spleiser korte deler av veglenke til lengre sammenhengende biter
     
     Tar en liste med veglenke-deler (segmenter) og skjøter dem sammen til ett 
@@ -39,9 +40,12 @@ def spleisveglenkesegmenter( lenkebiter):
         
         if not nylenke: 
             nylenke = copy.deepcopy( lenk)  
-            nylenke['geometribiter'] = []
-            nylenke['segmenter'] = [ lenk ]
-            nylenke['geometribiter'].append( loads( 
+            nylenke.pop( 'geometri', 0)
+#            nylenke['segmenter'] = [ lenk ]
+            if not slettgeometri: 
+                nylenke['geometri'] = { 'wkt' : '' }
+                nylenke['geometribiter'] = []
+                nylenke['geometribiter'].append( loads( 
                                                     lenk['geometri']['wkt']))
         
         else: 
@@ -57,18 +61,20 @@ def spleisveglenkesegmenter( lenkebiter):
                     nylenke['sluttposisjon'] = max( lenk['sluttposisjon'], 
                                                    nylenke['sluttposisjon'])
                     
-                    nylenke['geometribiter'].append( loads( 
-                                                    lenk['geometri']['wkt']))
-        
-                    nylenke['segmenter'].append( lenk)
+                    if not slettgeometri: 
+                        nylenke['geometribiter'].append( loads( 
+                                                lenk['geometri']['wkt']))
+#        
+#                    nylenke['segmenter'].append( lenk)
                     
                     nylenke['strekningslengde'] += lenk['strekningslengde']
             else: 
                 andrelenker.append( lenk)
              
     # Slår sammen geometri 
-    tempgeom = shapely.ops.linemerge( nylenke['geometribiter'])
-    nylenke['geometri']['wkt'] = dumps(tempgeom)
+    if not slettgeometri: 
+        tempgeom = shapely.ops.linemerge( nylenke['geometribiter'])
+        nylenke['geometri']['wkt'] = dumps(tempgeom)
     
     nylenke['kortform'] = str(nylenke['startposisjon']) + '-' + \
         str(nylenke['sluttposisjon'] ) + '@' + str(nylenke['veglenkeid'])
@@ -85,9 +91,10 @@ def spleisveglenkesegmenter( lenkebiter):
     # Håndterer resten av lenkene: 
     resten = []
     if andrelenker: 
-        resten = spleisveglenkesegmenter( andrelenker )
+        resten = spleisveglenkesegmenter( andrelenker, slettgeometri=slettgeometri )
     
-    
+
+    nylenke.pop( 'geometribiter', 0)    
     returdata = [ nylenke ]
     returdata.extend( resten )
     return returdata
@@ -96,9 +103,9 @@ if __name__ == "__main__":
     
     r = requests.get('https://www.vegvesen.no/nvdb/api/v2/vegnett/lenker/2631223.json' )
     seg1 = r.json()
-    lenke1 = spleisveglenkesegmenter( seg1)
+    lenke1 = spleisveglenkesegmenter( seg1, slettgeometri=True)
     
     r = requests.get('https://www.vegvesen.no/nvdb/api/v2/vegnett/lenker/72852.json' )
     seg2 = r.json()
-    lenke2 = spleisveglenkesegmenter( seg2)
+    lenke2 = spleisveglenkesegmenter( seg2, slettgeometri=True)
     
