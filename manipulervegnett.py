@@ -7,7 +7,6 @@ Created on Tue Oct 24 21:34:03 2017
 import shapely
 from shapely.ops import linemerge
 from shapely.wkt import loads, dumps
-
 import json
 import requests 
 import copy 
