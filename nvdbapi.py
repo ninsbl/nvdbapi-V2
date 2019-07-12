@@ -256,7 +256,9 @@ class nvdbVegnett:
             warn("Input argument to add_request_arguments should be dict")
     
 
-    def anrope(self, path, parametre=None, debug=False, silent=False): 
+    def anrope(self, path, parametre=None, debug=False, silent=False, logganrop=False): 
+    
+        logganrop = True # Logger alle anrop til fil
     
         if not self.apiurl in path: 
             url = ''.join(( self.apiurl, path)) 
@@ -273,6 +275,15 @@ class nvdbVegnett:
             data = r.json()
             if debug and 'metadata' in data.keys(): 
                 print( '\n',  data['metadata'], '\n' ) 
+                
+            if logganrop: 
+                with open( 'C:/data/test/github/nvdbapiV2/logganrop.txt', 'a', encoding='utf-8' ) as f: 
+                    f.write( '\n==========================\n' ) 
+                    f.write( r.url ) 
+                    f.write( '\n' ) 
+                    f.write( json.dumps( data, indent=4, ensure_ascii=False) )
+                    f.write( '\n' )  
+                
             return r.json()
         
         else:

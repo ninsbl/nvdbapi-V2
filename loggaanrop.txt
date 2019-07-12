@@ -1,0 +1,3 @@
+Logger alle anrop mot NVDB api V2 fra nvdbapi.py
+
+
