@@ -277,7 +277,12 @@ class nvdbVegnett:
                 print( '\n',  data['metadata'], '\n' ) 
                 
             if logganrop: 
-                with open( 'C:/data/test/github/nvdbapiV2/logganrop.txt', 'a', encoding='utf-8' ) as f: 
+                loggfil = 'C:/data/test/github/nvdbapi-V2/logganrop.txt'
+                if not os.path.exists( loggfil): 
+                    with open( loggfil, 'w' ) as f2: 
+                        f2.write( 'Logger alle anrop mot NVDB api V2 fra nvdbapi.py\n' ) 
+            
+                with open(loggfil, 'a', encoding='utf-8' ) as f: 
                     f.write( '\n==========================\n' ) 
                     f.write( r.url ) 
                     f.write( '\n' ) 
