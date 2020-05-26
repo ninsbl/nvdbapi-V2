@@ -46,7 +46,7 @@ class nvdbVegnett:
                             'X-Client' : 'nvdbapi.py',
                             'X-Kontaktperson' : 'Anonymous'}
                             
-        self.update_http_header()
+        # self.update_http_header()
                             
         
         self.paginering = { 'antall'         : 1000,     # Hvor mange obj vi henter samtidig.
@@ -291,39 +291,55 @@ class nvdbVegnett:
     
     
 
-    def update_http_header(self, filename='nvdbapi-clientinfo.json'): 
+    def update_http_header(self, filename='nvdbapi-clientinfo.json',
+                           client=None, contact=None): 
     
-        contactsfile = filename
+        if filename:
+            contactsfile = filename
         
-        # Tricks for at qgis skal kunne finne klientinfo
-        if 'nvdbapi-dir' in os.environ.keys():
-            contactsfile = os.environ['nvdbapi-dir'] + '/' + contactsfile
-        
-        # Http header info
-        try: 
-            with open(contactsfile) as data_file:    
-                contacts = json.load(data_file)
+            # Http header info
+            try: 
+                with open(contactsfile) as data_file:    
+                    contacts = json.load(data_file)
 
-            if isinstance( contacts, dict): 
-                self.headers = merge_dicts( self.headers, contacts) 
+            except IOError:
+                # Tricks for at qgis skal kunne finne klientinfo
+                if 'nvdbapi-dir' in os.environ.keys():
+                    contactsfile = os.environ['nvdbapi-dir'] + '/' + contactsfile
+            
+                try: 
+                    with open(contactsfile) as data_file:    
+                        contacts = json.load(data_file)
 
-                if 'X-Client' not in contacts.keys(): 
-                    warn(' '.join(('No X-Client defined in ', contactsfile)) ) 
-                    
-                if 'X-Kontaktperson' not in contacts.keys(): 
-                    warn(' '.join(('No X-Contact defined in ', contactsfile)) ) 
+                except IOError:
+                    mytext = ' '.join( ('\nYou should provide the file', 
+                                    contactsfile,  '\n',   
+                            '\n{ "X-Client" : "YOUR SYSTEM",\n', 
+                            '"X-Kontaktperson" : "ola.nordmann@eposten.din" }\n' ))
+                    warn( mytext ) 
 
-            else: 
-                warn( 'X-Client and X-Contact not updated')
-                warn( ''.join(( 'Tror ikke ', contactsfile, 
-                            ' har riktig struktur', '\nSe dokumentasjon')) )
+        elif contact and client:
+           contacts = {
+                       'X-Client': client,  
+                       'X-Kontaktperson': contact
+                       }
+        else:
+            contacts = None
+
+        if isinstance( contacts, dict): 
+            self.headers = merge_dicts( self.headers, contacts) 
+
+            if 'X-Client' not in contacts.keys(): 
+                warn(' '.join(('No X-Client defined in ', contactsfile)) ) 
                 
-        except IOError:
-            mytext = ' '.join( ('\nYou should provide the file', 
-                            contactsfile,  '\n',   
-                    '\n{ "X-Client" : "YOUR SYSTEM",\n', 
-                    '"X-Kontaktperson" : "ola.nordmann@eposten.din" }\n' ))
-            warn( mytext ) 
+            if 'X-Kontaktperson' not in contacts.keys(): 
+                warn(' '.join(('No X-Contact defined in ', contactsfile)) ) 
+
+        else: 
+            warn( 'X-Client and X-Contact not updated')
+            warn( ''.join(( 'Tror ikke ', contactsfile, 
+                        ' har riktig struktur', '\nSe dokumentasjon')) )
+                
 
     def miljo(self, *args):
         """Kun internt på vegvesen-nettet!
@@ -429,7 +445,7 @@ class nvdbFagdata(nvdbVegnett):
                         }
         
         # Leser verdier for http header fra JSON-fil
-        self.update_http_header()
+        # self.update_http_header()
         
         # Refresh er lurt, (arver tilstand fra andre instanser). 
         self.refresh()
