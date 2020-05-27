@@ -46,7 +46,7 @@ class nvdbVegnett:
                             'X-Client' : 'nvdbapi.py',
                             'X-Kontaktperson' : 'Anonymous'}
                             
-        # self.update_http_header()
+        self.update_http_header()
                             
         
         self.paginering = { 'antall'         : 1000,     # Hvor mange obj vi henter samtidig.
@@ -294,7 +294,13 @@ class nvdbVegnett:
     def update_http_header(self, filename='nvdbapi-clientinfo.json',
                            client=None, contact=None): 
     
-        if filename:
+        if "X-Client" in os.environ and "X-Kontaktperson" in os.environ:
+            contacts = {
+                    'X-Client': os.environ['X-Client'],
+                    'X-Kontaktperson': os.environ['X-Kontaktperson']
+                    }
+
+        elif filename:
             contactsfile = filename
         
             # Http header info
@@ -445,7 +451,7 @@ class nvdbFagdata(nvdbVegnett):
                         }
         
         # Leser verdier for http header fra JSON-fil
-        # self.update_http_header()
+        self.update_http_header()
         
         # Refresh er lurt, (arver tilstand fra andre instanser). 
         self.refresh()
